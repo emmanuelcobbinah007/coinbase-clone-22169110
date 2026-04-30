@@ -3,6 +3,7 @@ import Layout from "./layout";
 import AuthLayout from "./AuthLayout";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
+import Dashboard from "./pages/Dashboard";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: "/explore",
         element: <Explore />
+      },
+      {
+        path: "/dashboard",
+        element: <Dashboard />
       },
       {
         path: "*",

@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import CoinbaseLogo from "../../assets/coinbaseLogoNavigation-4.svg";
-import { Link } from 'react-router-dom';
-import { MagnifyingGlassIcon, GlobeAltIcon, CheckIcon, Bars3Icon, XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { Link, useNavigate } from 'react-router-dom';
+import { MagnifyingGlassIcon, GlobeAltIcon, CheckIcon, Bars3Icon, XMarkIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { languages, searchTabs, searchData, navbarElements } from '../../data/navbarData';
+import { getStoredAuthUser, clearStoredAuthUser } from '../../utils/auth';
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTab, setSearchTab] = useState('Top');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(() => getStoredAuthUser());
   const closeTimeout = useRef(null);
   const searchInputRef = useRef(null);
+  const profileMenuRef = useRef(null);
 
   useEffect(() => {
     if (searchOpen) {
@@ -29,6 +34,38 @@ const Navbar = () => {
 
   const handleMouseLeave = () => {
     closeTimeout.current = setTimeout(() => setActiveMenu(null), 100);
+  };
+
+  useEffect(() => {
+    const refreshAuth = () => setAuthUser(getStoredAuthUser());
+
+    window.addEventListener('auth-user-changed', refreshAuth);
+    window.addEventListener('storage', refreshAuth);
+
+    return () => {
+      window.removeEventListener('auth-user-changed', refreshAuth);
+      window.removeEventListener('storage', refreshAuth);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const userInitial = authUser?.name?.[0]?.toUpperCase() || authUser?.email?.[0]?.toUpperCase() || 'U';
+
+  const handleSignOut = () => {
+    clearStoredAuthUser();
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+    navigate('/signin');
   };
 
   return (
@@ -121,19 +158,61 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* Sign in - hidden on mobile, visible on md+ */}
-            <Link to="/signin" className="hidden md:inline-block px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full text-sm font-bold transition-all ml-1">
-              Sign in
-            </Link>
-            
-            {/* Sign up - visible on all sizes */}
-            <Link 
-              to="/signup" 
-              className="px-6 py-2.5 text-white rounded-full text-sm font-bold transition-all"
-              style={{ backgroundColor: 'var(--coinbase-blue)' }}
-            >
-              Sign up
-            </Link>
+            {authUser ? (
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">
+                    {userInitial}
+                  </span>
+                  <span className="hidden sm:block text-sm font-bold text-gray-900 max-w-32 truncate">
+                    {authUser.name}
+                  </span>
+                  <ChevronDownIcon className="w-4 h-4 text-gray-700" />
+                </button>
+
+                <div className={`absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 transition-all duration-150 ${
+                  profileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-1 pointer-events-none'
+                }`}>
+                  <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                    <p className="text-sm font-bold text-gray-900 truncate">{authUser.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{authUser.email}</p>
+                  </div>
+
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setProfileMenuOpen(false)}
+                    className="block px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 rounded-xl"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Sign in - hidden on mobile, visible on md+ */}
+                <Link to="/signin" className="hidden md:inline-block px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full text-sm font-bold transition-all ml-1">
+                  Sign in
+                </Link>
+
+                {/* Sign up - visible on all sizes */}
+                <Link
+                  to="/signup"
+                  className="px-6 py-2.5 text-white rounded-full text-sm font-bold transition-all"
+                  style={{ backgroundColor: 'var(--coinbase-blue)' }}
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
 
             {/* Hamburger menu - visible below lg */}
             <button 
@@ -366,18 +445,36 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Bottom: Globe + Sign in (mobile only) */}
+        {/* Bottom: Globe + auth actions (mobile only) */}
         <div className="px-6 pb-10 flex items-center space-x-4">
           <button className="p-3 bg-gray-200 rounded-full">
             <GlobeAltIcon className="w-5 h-5 text-gray-900" />
           </button>
-          <Link 
-            to="/signin" 
-            className="px-8 py-3 bg-gray-200 text-gray-900 rounded-full text-sm font-bold"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Sign in
-          </Link>
+          {authUser ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="px-6 py-3 bg-gray-200 text-gray-900 rounded-full text-sm font-bold"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="px-6 py-3 bg-red-100 text-red-700 rounded-full text-sm font-bold"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/signin"
+              className="px-8 py-3 bg-gray-200 text-gray-900 rounded-full text-sm font-bold"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </>
