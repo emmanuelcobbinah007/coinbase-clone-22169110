@@ -6,6 +6,7 @@ import XIcon from '../../assets/x-light.svg'
 import LinkedInIcon from '../../assets/linkedin-light.svg'
 import InstagramIcon from '../../assets/instagram-light.svg'
 import TikTokIcon from '../../assets/tiktok-light.svg'
+import FooterDisclaimer from './FooterDisclaimer'
 import {
   company, learn, individuals, businesses, institutions,
   developers, support, assetPrices, stockPrices, socialLinks,
@@ -103,6 +104,8 @@ const Footer = () => {
             <span>English</span>
           </div>
         </div>
+
+        <FooterDisclaimer />
 
       </div>
     </footer>

@@ -55,10 +55,9 @@ const SignIn = () => {
 
       const displayNameFromPayload = payload?.user?.name || payload?.name
       const emailFromPayload = payload?.user?.email || payload?.email || loginEmail
-      const fallbackName = emailFromPayload.split('@')[0] || 'User'
 
       setStoredAuthUser({
-        name: displayNameFromPayload || fallbackName,
+        name: displayNameFromPayload,
         email: emailFromPayload,
       })
 
@@ -168,7 +167,7 @@ const SignIn = () => {
             {step === 'password' && (
               <div className="px-4 py-3 rounded-xl" style={{ backgroundColor: '#1c1d20', border: '1px solid #2e2f33' }}>
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  This is a test project. Do not use your real password or sensitive account credentials here.
+                  Demo app – do not use your real password.
                 </p>
               </div>
             )}
