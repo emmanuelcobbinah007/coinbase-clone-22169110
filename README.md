@@ -1,4 +1,5 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/fcRde9Vj)
+
 # Coinbase Clone - React & Tailwind CSS Assignment
 
 ## 📋 Overview
@@ -74,7 +75,7 @@ src/
 
 ## 🎨 Design Reference
 
-Visit [coinbase.com](https://www.coinbase.com/) 
+Visit [coinbase.com](https://www.coinbase.com/)
 
 - Overall layout and structure across all pages
 - Consistent color scheme and typography
@@ -98,3 +99,26 @@ Visit [coinbase.com](https://www.coinbase.com/)
 ## 🌐 Deployment on Netlify
 
 You must deploy your completed project on **Netlify**.
+
+---
+
+## 🔐 Environment Variables
+
+This project uses Vite. Put local, sensitive, or environment-specific values in a `.env` file at the project root.
+
+- The client can only read env variables prefixed with `VITE_`.
+- Example file: `.env.example` (copy this to `.env` and fill in values).
+
+Common variables used in this project:
+
+```text
+# Backend API base used by `src/api/crypto.js`
+VITE_API_BASE=http://localhost:3000/api/crypto
+
+# Example placeholders for other services:
+# VITE_SUPABASE_KEY=
+# VITE_SENTRY_DSN=
+# VITE_GOOGLE_ANALYTICS_ID=
+```
+
+Security note: Do NOT commit your local `.env` file. `.env` is listed in `.gitignore`.

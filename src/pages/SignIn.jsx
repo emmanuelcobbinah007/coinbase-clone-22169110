@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import CoinbaseLogo from '../assets/coinbaseLogoNavigation-4.svg'
 import { setStoredAuthUser } from '../utils/auth'
 
+const API_BASE = import.meta?.env?.VITE_API_BASE || '/api'
 const SignIn = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -32,7 +33,7 @@ const SignIn = () => {
     try {
       const loginEmail = (submittedEmail || email).trim()
 
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

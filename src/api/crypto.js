@@ -1,4 +1,4 @@
-const API_BASE = '/api/crypto'
+const API_BASE = import.meta?.env?.VITE_API_BASE || '/api/crypto'
 
 async function safeFetch(path = '', opts = {}) {
   try {
