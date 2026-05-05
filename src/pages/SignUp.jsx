@@ -34,7 +34,7 @@ const SignUp = () => {
     try {
       const signupEmail = (submittedEmail || email).trim()
 
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetch(`${API_BASE}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
