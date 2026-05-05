@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { ChevronRightIcon, StarIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
 import { MiniChart } from "./Charts";
+import { getAllCryptos } from '../../api/crypto'
+import { getStoredAuthUser } from '../../utils/auth'
 import {
   cryptoAssets,
-  TOTAL_ASSETS,
   formatPrice,
   getChangeColor,
   getChangeArrow,
@@ -40,6 +41,34 @@ const ROW_OPTIONS = [10, 25, 50];
 const TIME_OPTIONS = ["1H", "1D", "1W", "1M", "1Y"];
 const ASSET_OPTIONS = ["All assets", "Tradable", "Gainers", "Losers"];
 
+const colorFromSymbol = (symbol) => {
+  const palette = ['#2563eb', '#7c3aed', '#db2777', '#059669', '#d97706', '#dc2626', '#0f766e', '#4f46e5']
+  const key = symbol || 'C'
+  let hash = 0
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+  return palette[hash % palette.length]
+}
+
+const normalizeRemoteAsset = (asset) => {
+  const fallback = cryptoAssets.find((item) => item.ticker === asset.symbol) || {}
+  const price = Number(asset.price ?? fallback.price ?? 0)
+  const change = Number(asset.change24h ?? fallback.change ?? 0)
+
+  return {
+    name: asset.name || fallback.name || asset.symbol,
+    ticker: asset.symbol || fallback.ticker || '',
+    price,
+    change,
+    mktCap: fallback.mktCap || '—',
+    volume: fallback.volume || '—',
+    color: fallback.color || colorFromSymbol(asset.symbol),
+    letter: fallback.letter || (asset.symbol ? asset.symbol[0] : (asset.name ? asset.name[0] : 'C')),
+    badge: fallback.badge || null,
+    image: asset.image || null,
+    createdAt: asset.createdAt || null,
+  }
+}
+
 const CryptoMarketPrices = ({ searchQuery }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState(new Set());
@@ -48,6 +77,9 @@ const CryptoMarketPrices = ({ searchQuery }) => {
   const [assetFilter, setAssetFilter] = useState("All assets");
   const [sortColumn, setSortColumn] = useState(null); // "name" | "price" | "change" | "mktCap" | "volume"
   const [sortDir, setSortDir] = useState("none");     // "none" | "asc" | "desc"
+  const [liveAssets, setLiveAssets] = useState(null);
+  const [loadingLive, setLoadingLive] = useState(true);
+  const [authUser, setAuthUser] = useState(() => getStoredAuthUser());
 
   /* Dropdown open states */
   const [openDropdown, setOpenDropdown] = useState(null); // "assets" | "time" | "rows" | null
@@ -59,6 +91,41 @@ const CryptoMarketPrices = ({ searchQuery }) => {
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getAllCryptos()
+      .then((data) => {
+        if (!mounted) return;
+        const list = Array.isArray(data) ? data : (data?.cryptos || data?.data || []);
+        if (list.length) {
+          setLiveAssets(list.map(normalizeRemoteAsset));
+        }
+      })
+      .catch(() => {
+        // keep the static fallback if the API is temporarily unavailable
+      })
+      .finally(() => {
+        if (mounted) setLoadingLive(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const refreshAuth = () => setAuthUser(getStoredAuthUser());
+
+    window.addEventListener('auth-user-changed', refreshAuth);
+    window.addEventListener('storage', refreshAuth);
+
+    return () => {
+      window.removeEventListener('auth-user-changed', refreshAuth);
+      window.removeEventListener('storage', refreshAuth);
+    };
   }, []);
 
   /* Cycle sort: none → asc → desc → none */
@@ -76,7 +143,7 @@ const CryptoMarketPrices = ({ searchQuery }) => {
 
   /* Filter + sort assets */
   const processedAssets = useMemo(() => {
-    let list = [...cryptoAssets];
+    let list = [...(liveAssets || cryptoAssets)];
 
     /* Search filter */
     if (searchQuery.trim()) {
@@ -105,9 +172,10 @@ const CryptoMarketPrices = ({ searchQuery }) => {
     }
 
     return list;
-  }, [searchQuery, assetFilter, sortColumn, sortDir]);
+  }, [searchQuery, assetFilter, sortColumn, sortDir, liveAssets]);
 
-  const totalPages = Math.ceil(TOTAL_ASSETS / rowsPerPage);
+  const totalAssets = processedAssets.length;
+  const totalPages = Math.max(1, Math.ceil(totalAssets / rowsPerPage));
   const paginatedAssets = processedAssets.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
@@ -176,10 +244,10 @@ const CryptoMarketPrices = ({ searchQuery }) => {
         <h2 className="text-xl md:text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-display)" }}>
           Crypto market prices
         </h2>
-        <span className="text-sm text-gray-400">{TOTAL_ASSETS.toLocaleString()} assets</span>
+        <span className="text-sm text-gray-400">{totalAssets.toLocaleString()} assets</span>
       </div>
       <p className="text-sm text-gray-500 mb-2">
-        The overall crypto market is growing this week. As of today, the total crypto market capitalization is 23.99 trillion, representing a 0.64% increase from last week.
+        {loadingLive ? 'Loading live crypto data from the backend...' : 'Live crypto prices are being pulled from the backend and can be searched, filtered, and sorted below.'}
       </p>
       <a href="#" className="text-sm text-[var(--coinbase-blue)] font-medium hover:underline">
         Read more
@@ -322,12 +390,21 @@ const CryptoMarketPrices = ({ searchQuery }) => {
                 </td>
                 <td className="py-5">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                      style={{ backgroundColor: asset.color }}
-                    >
-                      {asset.letter}
-                    </div>
+                    {asset.image ? (
+                      <img
+                        src={asset.image}
+                        alt={asset.name}
+                        className="w-8 h-8 rounded-full shrink-0 object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                        style={{ backgroundColor: asset.color }}
+                      >
+                        {asset.letter}
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{asset.name}</p>
                       <div className="flex items-center gap-2">
@@ -346,11 +423,11 @@ const CryptoMarketPrices = ({ searchQuery }) => {
                 <td className={`py-5 text-sm font-medium ${getChangeColor(asset.change)}`}>
                   {getChangeArrow(asset.change)} {Math.abs(asset.change).toFixed(2)}%
                 </td>
-                <td className="py-5 text-sm text-gray-900">GHS {asset.mktCap}</td>
-                <td className="py-5 text-sm text-gray-900">GHS {asset.volume}</td>
+                <td className="py-5 text-sm text-gray-900">{asset.mktCap === '—' ? '—' : `GHS ${asset.mktCap}`}</td>
+                <td className="py-5 text-sm text-gray-900">{asset.volume === '—' ? '—' : `GHS ${asset.volume}`}</td>
                 <td className="py-5 text-right">
                   <Link
-                    to="/signup"
+                    to={authUser ? `/crypto/${asset.ticker}` : '/signup'}
                     className="inline-block px-5 py-2 bg-[var(--coinbase-blue)] text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors"
                   >
                     Trade
@@ -390,10 +467,14 @@ const CryptoMarketPrices = ({ searchQuery }) => {
           <div key={asset.ticker} className="flex items-center justify-between py-4 border-b border-gray-50">
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
                 style={{ backgroundColor: asset.color }}
               >
-                {asset.letter}
+                {asset.image ? (
+                  <img src={asset.image} alt={asset.name} className="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  asset.letter
+                )}
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">{asset.name}</p>
@@ -421,7 +502,7 @@ const CryptoMarketPrices = ({ searchQuery }) => {
       {/* Pagination */}
       {renderPagination()}
       <p className="text-center text-sm text-gray-400 mt-3 mb-8">
-        {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, TOTAL_ASSETS)} of {TOTAL_ASSETS.toLocaleString()} assets
+        {(currentPage - 1) * rowsPerPage + 1}-{Math.min(currentPage * rowsPerPage, totalAssets)} of {totalAssets.toLocaleString()} assets
       </p>
     </section>
   );

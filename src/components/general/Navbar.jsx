@@ -427,7 +427,7 @@ const Navbar = () => {
       }`}>
         <div className="px-6 pt-8 space-y-2">
           <Link 
-            to="/cryptocurrencies" 
+            to="/explore" 
             className="block text-2xl font-bold text-gray-900 py-4"
             onClick={() => setMobileMenuOpen(false)}
           >

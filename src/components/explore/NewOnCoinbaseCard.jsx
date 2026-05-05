@@ -1,9 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { newOnCoinbase } from "../../data/exploreData";
+import { newOnCoinbase as staticNewOnCoinbase } from "../../data/exploreData";
+import { getNewListings } from '../../api/crypto'
+import { useNavigate } from 'react-router-dom'
 
 const NewOnCoinbaseCard = () => {
   const [idx, setIdx] = useState(0);
+  const [remote, setRemote] = useState(null)
+  const navigate = useNavigate();
+ 
+  useEffect(() => {
+    let mounted = true
+    getNewListings().then((data) => {
+      if (!mounted) return
+      const list = Array.isArray(data) ? data : (data?.data || data?.cryptos || [])
+      if (list && list.length) setRemote(list)
+    }).catch(() => {
+      // ignore
+    })
+    return () => { mounted = false }
+  }, [])
 
   const shift = (dir) => {
     setIdx((prev) => {
@@ -30,19 +46,30 @@ const NewOnCoinbaseCard = () => {
         </div>
       </div>
       <div className="flex gap-3 overflow-hidden">
-        {newOnCoinbase.slice(idx, idx + 2).map((n) => (
-          <div key={n.ticker} className="flex-1 bg-gray-50 rounded-xl p-4 min-w-0">
+        {(remote || staticNewOnCoinbase).slice(idx, idx + 2).map((n) => {
+          const ticker = n.symbol || n.ticker || n.code || n.name
+          const name = n.name || n.title || ticker
+          const date = n.createdAt ? new Date(n.createdAt).toLocaleDateString() : (n.date || '')
+          const color = n.color || '#6b7280'
+          const letter = (n.symbol || n.ticker || n.name || 'N')[0]
+          return (
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3"
-              style={{ backgroundColor: n.color }}
+              key={ticker}
+              onClick={() => navigate(`/crypto/${ticker}`)}
+              className="flex-1 bg-gray-50 rounded-xl p-4 min-w-0 cursor-pointer hover:shadow-lg transition-shadow"
             >
-              {n.letter}
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold mb-3"
+                style={{ backgroundColor: color }}
+              >
+                {letter}
+              </div>
+              <p className="text-xs text-gray-500 uppercase">{ticker}</p>
+              <p className="text-sm font-bold text-gray-900">{name}</p>
+              <p className="text-xs text-gray-400 mt-1">{date}</p>
             </div>
-            <p className="text-xs text-gray-500 uppercase">{n.ticker}</p>
-            <p className="text-sm font-bold text-gray-900">{n.name}</p>
-            <p className="text-xs text-gray-400 mt-1">{n.date}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   );
