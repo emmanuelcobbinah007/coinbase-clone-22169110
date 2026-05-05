@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { getStoredAuthUser } from '../utils/auth'
 import CoinbaseLogo from '../assets/coinbaseLogoNavigation-4.svg'
@@ -7,6 +7,9 @@ import {
   ShieldCheckIcon,
   ChartBarSquareIcon,
   DocumentTextIcon,
+  PlusCircleIcon,
+  Bars3Icon,
+  XMarkIcon,
   WrenchScrewdriverIcon,
   QuestionMarkCircleIcon,
   Squares2X2Icon,
@@ -16,6 +19,7 @@ const PageInProgress = () => {
   const navigate = useNavigate()
   const { section } = useParams()
   const user = getStoredAuthUser()
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   if (!user) {
     return <Navigate to="/signin" replace />
@@ -33,6 +37,8 @@ const PageInProgress = () => {
     { key: 'security', label: 'Security', icon: ShieldCheckIcon, section: 'security' },
     { key: 'activity', label: 'Activity', icon: ChartBarSquareIcon, section: 'activity' },
     { key: 'statements', label: 'Statements', icon: DocumentTextIcon, section: 'statements' },
+    { key: 'add-crypto', label: 'Add Crypto', icon: PlusCircleIcon, section: 'add-crypto' },
+    { key: 'created-coins', label: 'Created Coins', icon: DocumentTextIcon, section: 'created-coins' },
   ]
 
   const label = section
@@ -42,8 +48,18 @@ const PageInProgress = () => {
         .join(' ')
     : 'This page'
 
-  const goToInProgressPage = (nextSection) => {
-    navigate(`/dashboard/in-progress/${nextSection}`)
+  const goToInProgressPage = (nextSection, closeDrawer = false) => {
+    if (nextSection === 'add-crypto') {
+      navigate('/dashboard/add-crypto')
+    } else if (nextSection === 'created-coins') {
+      navigate('/dashboard/created-coins')
+    } else {
+      navigate(`/dashboard/in-progress/${nextSection}`)
+    }
+
+    if (closeDrawer) {
+      setIsDrawerOpen(false)
+    }
   }
 
   return (
@@ -81,8 +97,74 @@ const PageInProgress = () => {
           </nav>
         </aside>
 
+        {isDrawerOpen ? (
+          <div className="fixed inset-0 z-30 lg:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/35"
+              onClick={() => setIsDrawerOpen(false)}
+              aria-label="Close menu overlay"
+            />
+
+            <div className="absolute inset-y-0 left-0 w-[260px] border-r border-gray-200 bg-[#fbfcff] p-4">
+              <div className="mb-6 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setIsDrawerOpen(false)
+                    navigate('/')
+                  }}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
+                  <img src={CoinbaseLogo} alt="Coinbase" className="h-7 w-7" />
+                  <p className="text-lg font-semibold text-gray-900">ACCOUNT</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="h-9 w-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"
+                  aria-label="Close menu"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="space-y-2">
+                {sideNavItems.map((item, index) => {
+                  const Icon = item.icon
+                  const active = item.section === section || (!section && index === 0)
+
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => goToInProgressPage(item.section, true)}
+                      className={`w-full flex items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
+                        active
+                          ? 'bg-blue-50 text-[var(--coinbase-blue)] font-semibold'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+            </div>
+          </div>
+        ) : null}
+
         <div className="bg-white lg:ml-[220px] min-h-screen flex flex-col">
-          <div className="fixed top-0 right-0 left-0 lg:left-[220px] z-10 flex items-center justify-end gap-2 border-b border-gray-200 px-4 py-3 sm:px-6 bg-white">
+          <div className="fixed top-0 right-0 left-0 lg:left-[220px] z-10 flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-white">
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(true)}
+              className="h-10 w-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-colors lg:hidden"
+              aria-label="Open dashboard menu"
+            >
+              <Bars3Icon className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2">
             <button className="h-10 w-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-colors">
               <QuestionMarkCircleIcon className="h-5 w-5" />
             </button>
@@ -91,6 +173,7 @@ const PageInProgress = () => {
             </button>
             <div className="h-10 w-10 rounded-full bg-cyan-500 text-white font-semibold flex items-center justify-center">
               {userInitial}
+            </div>
             </div>
           </div>
 
