@@ -1,42 +1,11 @@
-const DEFAULT_API_BASE = '/api/crypto'
-
-function stripTrailingSlash(value) {
-  return value.replace(/\/+$/, '')
-}
-
-function getConfiguredApiBase() {
-  return stripTrailingSlash((import.meta?.env?.VITE_API_BASE || DEFAULT_API_BASE).trim())
-}
-
-export function getBackendRoot() {
-  const base = getConfiguredApiBase()
-
-  if (base.endsWith('/api/crypto')) {
-    return base.slice(0, -'/api/crypto'.length)
-  }
-
-  if (base.endsWith('/api')) {
-    return base.slice(0, -'/api'.length)
-  }
-
-  return base
-}
+// Backend root URL (e.g., http://localhost:5000 or https://backend.onrender.com)
+// Path segments (/api/crypto, /api/auth, etc.) are appended by individual modules
+const BACKEND_ROOT = (import.meta?.env?.VITE_API_BASE || '').trim().replace(/\/+$/, '')
 
 export function getCryptoApiBase() {
-  const base = getConfiguredApiBase()
-
-  if (base.endsWith('/api/crypto')) {
-    return base
-  }
-
-  if (base.endsWith('/api')) {
-    return `${base}/crypto`
-  }
-
-  return `${base}/api/crypto`
+  return `${BACKEND_ROOT}/api/crypto`
 }
 
 export function getAuthApiBase() {
-  const backendRoot = getBackendRoot()
-  return `${backendRoot}/api/auth`
+  return `${BACKEND_ROOT}/api/auth`
 }
