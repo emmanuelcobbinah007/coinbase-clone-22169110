@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import CoinbaseLogo from '../assets/coinbaseLogoNavigation-4.svg'
 import { setStoredAuthUser } from '../utils/auth'
+import { getAuthApiBase } from '../utils/api'
 
-const API_BASE = import.meta?.env?.VITE_API_BASE || '/api'
+const API_BASE = getAuthApiBase()
 const SignUp = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
