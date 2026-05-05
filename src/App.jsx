@@ -4,6 +4,7 @@ import AuthLayout from "./AuthLayout";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import Dashboard from "./pages/Dashboard";
+import PageInProgress from "./pages/PageInProgress";
 import CryptoDetail from "./pages/CryptoDetail";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -28,14 +29,18 @@ const router = createBrowserRouter([
         element: <CryptoDetail />
       },
       {
-        path: "/dashboard",
-        element: <Dashboard />
-      },
-      {
         path: "*",
         element: <NotFound />
       },
     ],
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard />
+  },
+  {
+    path: "/dashboard/in-progress/:section",
+    element: <PageInProgress />
   },
   {
     element: <AuthLayout />,

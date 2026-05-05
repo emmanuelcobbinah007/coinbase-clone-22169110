@@ -1,8 +1,31 @@
 import React from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { clearStoredAuthUser, getStoredAuthUser } from '../utils/auth'
-import { useEffect, useState } from 'react'
-import { getGainers, getNewListings } from '../api/crypto'
+import CoinbaseLogo from '../assets/coinbaseLogoNavigation-4.svg'
+import {
+  UserCircleIcon,
+  ShieldCheckIcon,
+  ChartBarSquareIcon,
+  DocumentTextIcon,
+  PhoneIcon,
+  IdentificationIcon,
+  UserIcon,
+  HomeModernIcon,
+  EnvelopeIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  ChevronRightIcon,
+  QuestionMarkCircleIcon,
+  Squares2X2Icon,
+} from '@heroicons/react/24/outline'
+
+const sideNavItems = [
+  { key: 'profile', label: 'Profile', icon: UserCircleIcon, section: 'profile' },
+  { key: 'security', label: 'Security', icon: ShieldCheckIcon, section: 'security' },
+  { key: 'activity', label: 'Activity', icon: ChartBarSquareIcon, section: 'activity' },
+  { key: 'statements', label: 'Statements', icon: DocumentTextIcon, section: 'statements' },
+]
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -18,136 +41,161 @@ const Dashboard = () => {
     year: 'numeric',
   })
 
+  const userInitial = user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
+
+  const profileRows = [
+    {
+      key: 'phone',
+      icon: PhoneIcon,
+      title: 'Phone Number',
+      value: 'xxxxxxx60',
+    },
+    {
+      key: 'legalName',
+      icon: IdentificationIcon,
+      title: 'Legal Name',
+      value: user.name || 'Not set',
+    },
+    {
+      key: 'displayName',
+      icon: UserIcon,
+      title: 'Display Name',
+      value: user.name || 'User',
+    },
+    {
+      key: 'address',
+      icon: HomeModernIcon,
+      title: 'Residential Address',
+      value: 'Not set',
+    },
+    {
+      key: 'email',
+      icon: EnvelopeIcon,
+      title: 'Email Address',
+      value: user.email,
+    },
+    {
+      key: 'dob',
+      icon: CalendarDaysIcon,
+      title: 'Date of birth',
+      value: 'xx/xx/xx99',
+    },
+    {
+      key: 'timezone',
+      icon: ClockIcon,
+      title: 'Time zone',
+      value: 'Pacific Time (US & Canada)',
+    },
+    {
+      key: 'currency',
+      icon: CurrencyDollarIcon,
+      title: 'Currency',
+      value: 'GHS',
+    },
+  ]
+
   const handleSignOut = () => {
     clearStoredAuthUser()
     navigate('/signin')
   }
 
-  return (
-    <section className="min-h-[70vh] bg-[#f8f9fb] px-6 py-10 sm:py-12">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-5">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-            <p className="text-gray-500">Welcome back, {user.name || 'User'}.</p>
-          </div>
+  const goToInProgressPage = (section) => {
+    navigate(`/dashboard/in-progress/${section}`)
+  }
 
-          <div className="flex gap-3">
-            <Link
-              to="/explore"
-              className="px-5 py-2.5 rounded-full text-sm font-bold text-gray-900 bg-gray-100 hover:bg-gray-200 transition-colors"
-            >
-              Explore
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="px-5 py-2.5 rounded-full text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-            >
-              Sign out
+  return (
+    <section className="min-h-screen bg-[#f5f7fb] p-0">
+      <div className="w-full min-h-screen border-0 bg-white overflow-hidden">
+        {/* Fixed Sidebar */}
+        <aside className="hidden lg:block fixed inset-y-0 left-0 w-[220px] border-r border-gray-200 bg-[#fbfcff] p-4 lg:p-5 z-20">
+          <button
+            onClick={() => navigate('/')}
+            className="hover:cursor-pointer mb-6 flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <img src={CoinbaseLogo} alt="Coinbase" className="h-7 w-7" />
+            <p className="text-lg font-semibold text-gray-900">ACCOUNT</p>
+          </button>
+
+          <nav className="space-y-2">
+            {sideNavItems.map((item, index) => {
+              const Icon = item.icon
+              const active = index === 0
+
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => (item.section === 'profile' ? navigate('/dashboard') : goToInProgressPage(item.section))}
+                  className={`w-full flex items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
+                    active
+                      ? 'bg-blue-50 text-[var(--coinbase-blue)] font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </aside>
+
+        <div className="bg-white lg:ml-[220px] min-h-screen flex flex-col">
+          <div className="fixed top-0 right-0 left-0 lg:left-[220px] z-10 flex items-center justify-end gap-2 border-b border-gray-200 px-4 py-3 sm:px-6 bg-white">
+            <button className="h-10 w-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <QuestionMarkCircleIcon className="h-5 w-5" />
             </button>
+            <button className="h-10 w-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <Squares2X2Icon className="h-5 w-5" />
+            </button>
+            <div className="h-10 w-10 rounded-full bg-cyan-500 text-white font-semibold flex items-center justify-center">
+              {userInitial}
+            </div>
           </div>
+
+            <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-8 sm:py-10 flex-1 mt-18">
+              <div className="text-center mb-8">
+                <div className="mx-auto mb-3 h-16 w-16 rounded-full bg-blue-500 text-white text-3xl font-medium flex items-center justify-center">
+                  {userInitial}
+                </div>
+                <h1 className="text-4xl font-semibold tracking-tight text-gray-900">{user.name || 'User'}</h1>
+                <p className="mt-2 text-sm text-gray-500">Member since {joinedLabel}</p>
+              </div>
+
+              <div className="divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-white">
+                {profileRows.map((row) => {
+                  const Icon = row.icon
+                  return (
+                    <button
+                      key={row.key}
+                      onClick={() => goToInProgressPage(row.key)}
+                      className="w-full px-4 py-4 sm:px-6 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <Icon className="h-5 w-5 text-gray-500 mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xl font-semibold text-gray-900 leading-tight">{row.title}</p>
+                          <p className="text-lg text-gray-500 truncate mt-0.5">{row.value}</p>
+                        </div>
+                      </div>
+                      <ChevronRightIcon className="h-5 w-5 text-gray-400 shrink-0" />
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleSignOut}
+                  className="rounded-full bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Name</p>
-            <p className="text-lg font-semibold text-gray-900 break-words">{user.name || 'N/A'}</p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Email</p>
-            <p className="text-lg font-semibold text-gray-900 break-all">{user.email}</p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Account status</p>
-            <p className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">
-              Active
-            </p>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Member since</p>
-            <p className="text-lg font-semibold text-gray-900">{joinedLabel}</p>
-          </div>
-        </div>
-        {/* Market sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">Top gainers</h3>
-            <GainersList />
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">New listings</h3>
-            <NewList />
-          </div>
-        </div>
-      </div>
     </section>
-  )
-}
-
-function GainersList() {
-  const [items, setItems] = useState(null)
-  useEffect(() => {
-    let mounted = true
-    getGainers()
-      .then((list) => {
-        if (mounted) setItems((list || []).slice(0, 6))
-      })
-      .catch(() => setItems([]))
-    return () => { mounted = false }
-  }, [])
-
-  if (items === null) return <p className="text-sm text-gray-500">Loading...</p>
-  if (!items.length) return <p className="text-sm text-gray-500">No gainers found.</p>
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {items.map((c) => (
-        <div key={c._id || c.symbol || c.name} className="p-3 rounded-lg bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-gray-900">{c.name || c.symbol}</p>
-              <p className="text-xs text-gray-500">{c.symbol || ''}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold text-gray-900">{typeof c.price === 'number' ? `GHS ${c.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : c.price}</p>
-              <p className={`text-xs font-semibold ${Number(c.change24h || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{Number(c.change24h || 0) >= 0 ? '+' : ''}{Number(c.change24h || 0).toFixed(2)}%</p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function NewList() {
-  const [items, setItems] = useState(null)
-  useEffect(() => {
-    let mounted = true
-    getNewListings()
-      .then((list) => {
-        if (mounted) setItems((list || []).slice(0, 6))
-      })
-      .catch(() => setItems([]))
-    return () => { mounted = false }
-  }, [])
-
-  if (items === null) return <p className="text-sm text-gray-500">Loading...</p>
-  if (!items.length) return <p className="text-sm text-gray-500">No recent listings.</p>
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {items.map((c) => (
-        <div key={c._id || c.symbol || c.name} className="p-3 rounded-lg bg-gray-50">
-          <p className="text-sm font-semibold text-gray-900">{c.name || c.symbol}</p>
-          <p className="text-xs text-gray-500">{c.symbol || ''}</p>
-          <p className="text-xs text-gray-400 mt-1">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''}</p>
-        </div>
-      ))}
-    </div>
   )
 }
 
